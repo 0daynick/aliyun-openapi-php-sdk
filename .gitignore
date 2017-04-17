@@ -1,4 +1,5 @@
 */.settings/
 */.buildpath
 */.project
-aliyun-php-sdk-test/
+vendor/
+.idea/

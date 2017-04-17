@@ -1,8 +1,8 @@
-# Open API SDK for php developers
+# 基于阿里云sdk的psr-4版本
 
 ## Requirements
 
-- PHP 5.3+
+- PHP 5.4+
 
 ## Build
 
@@ -11,22 +11,16 @@
 ## Example
 
 ```php
-include_once '../aliyun-php-sdk-core/Config.php';
-use Ecs\Request\V20140526 as Ecs;
 
+use Aliyun\Core\Profile\DefaultProfile;
+use Aliyun\Core\DefaultAcsClient;
+use Aliyun\Ecs\DescribeRegionsRequest; 
+ 
 $iClientProfile = DefaultProfile::getProfile("cn-hangzhou", "<your accessKey>", "<your accessSecret>");
 $client = new DefaultAcsClient($iClientProfile);
 
-$request = new Ecs\DescribeRegionsRequest();
+$request = new DescribeRegionsRequest();
 $request->setMethod("GET");
 $response = $client->getAcsResponse($request);
 print_r($response);
 ```
-## Authors && Contributors
-
-- [Zuhe]()
-- [Ma Lijie](https://github.com/malijiefoxmail)
-
-## License
-
-licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html)
