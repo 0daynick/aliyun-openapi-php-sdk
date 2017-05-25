@@ -7,32 +7,12 @@
             "email": "overnic@httpd.cc"
         }
     ],
-    "require": {},
+    "require": {
+		"php":">=5.4"
+	},
     "autoload":{
         "psr-4":{
-            "Aliyun\\Alidns\\":"src/aliyun-php-sdk-alidns/Library",
-            "Aliyun\\BatchCompute\\":"src/aliyun-php-sdk-batchcompute/Library",
-            "Aliyun\\Cdn\\":"src/aliyun-php-sdk-cdn/Library",
-            "Aliyun\\Cms\\":"src/aliyun-php-sdk-cms/Library",
-            "Aliyun\\Core\\":"src/aliyun-php-sdk-core",
-            "Aliyun\\CS\\":"src/aliyun-php-sdk-cs/Library",
-            "Aliyun\\Dm\\":"src/aliyun-php-sdk-dm/Library",
-            "Aliyun\\Domain\\":"src/aliyun-php-sdk-domain/Library",
-            "Aliyun\\Ecs\\":"src/aliyun-php-sdk-ecs/Library",
-            "Aliyun\\Green\\":"src/aliyun-php-sdk-green/Library",
-            "Aliyun\\Iot\\":"src/aliyun-php-sdk-iot/Library",
-            "Aliyun\\Jaq\\":"src/aliyun-php-sdk-jaq/Library",
-            "Aliyun\\Kms\\":"src/aliyun-php-sdk-kms/Library",
-            "Aliyun\\Live\\":"src/aliyun-php-sdk-live/Library",
-            "Aliyun\\Market\\":"src/aliyun-php-sdk-market/Library",
-            "Aliyun\\Mts\\":"src/aliyun-php-sdk-mts/Library",
-            "Aliyun\\Plus\\":"src/aliyun-php-sdk-push/Library",
-            "Aliyun\\Rds\\":"src/aliyun-php-sdk-rds/Library",
-            "Aliyun\\Slb\\":"src/aliyun-php-sdk-slb/Library",
-            "Aliyun\\Ubsms\\":"src/aliyun-php-sdk-ubsms/Library",
-            "Aliyun\\Sts\\":"src/aliyun-php-sdk-sts/Library",
-            "Aliyun\\Sms\\":"src/aliyun-php-sdk-sms/Library",
-            "Aliyun\\Vod\\":"src/aliyun-php-sdk-vod/Library"
+            "Aliyun\\":"src",
         }
     }
 }
