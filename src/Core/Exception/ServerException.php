@@ -1,4 +1,6 @@
 <?php
+
+namespace Aliyun\Core\Exception;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,15 +19,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-namespace Aliyun\Core\Exception;
-
 class ServerException extends ClientException
 {
     private $httpStatus;
     private $requestId;
 
-    function  __construct($errorMessage, $errorCode, $httpStatus, $requestId)
+    public function __construct($errorMessage, $errorCode, $httpStatus, $requestId)
     {
         $messageStr = $errorCode . " " . $errorMessage . " HTTP Status: " . $httpStatus . " RequestID: " . $requestId;
         parent::__construct($messageStr, $errorCode);
@@ -44,5 +43,4 @@ class ServerException extends ClientException
     {
         return $this->requestId;
     }
-
 }

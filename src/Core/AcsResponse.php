@@ -1,4 +1,6 @@
 <?php
+
+namespace Aliyun\Core;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,31 +19,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-namespace Aliyun\Core;
-
 class AcsResponse
 {
-	private $code;	
-	private $message;
-	
-	public function getCode()
-	{
-		return $this->code;
-	}
-	
-	public function setCode($code)
-	{
-		$this->code = $code;
-	}
-	
-	public function getMessage()
-	{
-		return $this->message;
-	}
-	
-	public function setMessage($message)
-	{
-		$this->message = $message;
-	}
+    private $code;
+    private $message;
+    
+    public function getCode()
+    {
+        return $this->code;
+    }
+    
+    public function setCode($code)
+    {
+        $this->code = $code;
+    }
+    
+    public function getMessage()
+    {
+        return $this->message;
+    }
+    
+    public function setMessage($message)
+    {
+        $this->message = $message;
+    }
 }

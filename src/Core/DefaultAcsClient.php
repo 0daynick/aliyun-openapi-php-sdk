@@ -1,4 +1,5 @@
 <?php
+namespace Aliyun\Core;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,109 +18,61 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-namespace Aliyun\Core;
-
 use Aliyun\Core\Exception\ClientException;
 use Aliyun\Core\Exception\ServerException;
 use Aliyun\Core\Http\HttpHelper;
-use Aliyun\Core\Regions\Endpoint;
 use Aliyun\Core\Regions\EndpointProvider;
-use Aliyun\Core\Regions\ProductDomain;
+use Aliyun\Core\Regions\LocationService;
 
 class DefaultAcsClient implements IAcsClient
-{    
+{
     public $iClientProfile;
     public $__urlTestFlag__;
+    private $locationService;
     
-    function  __construct($iClientProfile)
+    public function __construct($iClientProfile)
     {
         $this->iClientProfile = $iClientProfile;
         $this->__urlTestFlag__ = false;
-
-        //config http proxy
-        define('ENABLE_HTTP_PROXY', FALSE);
-        define('HTTP_PROXY_IP', '127.0.0.1');
-        define('HTTP_PROXY_PORT', '8888');
-
-        $endpoint_filename = dirname(__FILE__) . DIRECTORY_SEPARATOR . "Regions/endpoints.xml";
-        $xml = simplexml_load_string(file_get_contents($endpoint_filename));
-        $json = json_encode($xml);
-        $json_array = json_decode($json, TRUE);
-
-        $endpoints = array();
-
-        foreach ($json_array["Endpoint"] as $json_endpoint) {
-            # pre-process RegionId & Product
-            if (!array_key_exists("RegionId", $json_endpoint["RegionIds"])) {
-                $region_ids = array();
-            } else {
-                $json_region_ids = $json_endpoint['RegionIds']['RegionId'];
-                if (!is_array($json_region_ids)) {
-                    $region_ids = array($json_region_ids);
-                } else {
-                    $region_ids = $json_region_ids;
-                }
-            }
-
-            if (!array_key_exists("Product", $json_endpoint["Products"])) {
-                $products = array();
-
-            } else {
-                $json_products = $json_endpoint["Products"]["Product"];
-
-                if (array() === $json_products or !is_array($json_products)) {
-                    $products = array();
-                } else if (array_keys($json_products) !== range(0, count($json_products) - 1)) {
-                    # array is not sequential
-                    $products = array($json_products);
-                } else {
-                    $products = $json_products;
-                }
-            }
-
-            $product_domains = array();
-            foreach ($products as $product) {
-                $product_domain = new ProductDomain($product['ProductName'], $product['DomainName']);
-                array_push($product_domains, $product_domain);
-            }
-
-            $endpoint = new Endpoint($region_ids[0], $region_ids, $product_domains);
-            array_push($endpoints, $endpoint);
-        }
-
-        EndpointProvider::setEndpoints($endpoints);
+        $this->locationService = new LocationService($this->iClientProfile);
     }
     
     public function getAcsResponse($request, $iSigner = null, $credential = null, $autoRetry = true, $maxRetryNumber = 3)
     {
         $httpResponse = $this->doActionImpl($request, $iSigner, $credential, $autoRetry, $maxRetryNumber);
         $respObject = $this->parseAcsResponse($httpResponse->getBody(), $request->getAcceptFormat());
-        if(false == $httpResponse->isSuccess())
-        {
+        if (false == $httpResponse->isSuccess()) {
             $this->buildApiException($respObject, $httpResponse->getStatus());
         }
         return $respObject;
     }
 
     private function doActionImpl($request, $iSigner = null, $credential = null, $autoRetry = true, $maxRetryNumber = 3)
-    {    
-        if(null == $this->iClientProfile && (null == $iSigner || null == $credential 
-            || null == $request->getRegionId() || null == $request->getAcceptFormat()))
-        {
+    {
+        if (null == $this->iClientProfile && (null == $iSigner || null == $credential
+            || null == $request->getRegionId() || null == $request->getAcceptFormat())) {
             throw new ClientException("No active profile found.", "SDK.InvalidProfile");
         }
-        if(null == $iSigner)
-        {
+        if (null == $iSigner) {
             $iSigner = $this->iClientProfile->getSigner();
         }
-        if(null == $credential)
-        {
+        if (null == $credential) {
             $credential = $this->iClientProfile->getCredential();
         }
         $request = $this->prepareRequest($request);
-        $domain = EndpointProvider::findProductDomain($request->getRegionId(), $request->getProduct());
-        if(null == $domain)
+
+        // Get the domain from the Location Service by speicified `ServiceCode` and `RegionId`.
+        $domain = null;
+        if (null != $request->getLocationServiceCode())
         {
+            $domain = $this->locationService->findProductDomain($request->getRegionId(), $request->getLocationServiceCode(), $request->getLocationEndpointType(), $request->getProduct());
+        }       
+        if ($domain == null)
+        {
+            $domain = EndpointProvider::findProductDomain($request->getRegionId(), $request->getProduct());
+        }
+
+        if (null == $domain) {
             throw new ClientException("Can not find endpoint to access.", "SDK.InvalidRegionId");
         }
         $requestUrl = $request->composeUrl($iSigner, $credential, $domain);
@@ -128,17 +81,17 @@ class DefaultAcsClient implements IAcsClient
             throw new ClientException($requestUrl, "URLTestFlagIsSet");
         }
 
-        if(count($request->getDomainParameter())>0){
+        if (count($request->getDomainParameter())>0) {
             $httpResponse = HttpHelper::curl($requestUrl, $request->getMethod(), $request->getDomainParameter(), $request->getHeaders());
         } else {
-            $httpResponse = HttpHelper::curl($requestUrl, $request->getMethod(),$request->getContent(), $request->getHeaders());
+            $httpResponse = HttpHelper::curl($requestUrl, $request->getMethod(), $request->getContent(), $request->getHeaders());
         }
         
         $retryTimes = 1;
         while (500 <= $httpResponse->getStatus() && $autoRetry && $retryTimes < $maxRetryNumber) {
-            $requestUrl = $request->composeUrl($iSigner, $credential,$domain);
+            $requestUrl = $request->composeUrl($iSigner, $credential, $domain);
             
-            if(count($request->getDomainParameter())>0){
+            if (count($request->getDomainParameter())>0) {
                 $httpResponse = HttpHelper::curl($requestUrl, $request->getDomainParameter(), $request->getHeaders());
             } else {
                 $httpResponse = HttpHelper::curl($requestUrl, $request->getMethod(), $request->getContent(), $request->getHeaders());
@@ -149,23 +102,20 @@ class DefaultAcsClient implements IAcsClient
     }
     
     public function doAction($request, $iSigner = null, $credential = null, $autoRetry = true, $maxRetryNumber = 3)
-    {    
+    {
         trigger_error("doAction() is deprecated. Please use getAcsResponse() instead.", E_USER_NOTICE);
         return $this->doActionImpl($request, $iSigner, $credential, $autoRetry, $maxRetryNumber);
     }
     
     private function prepareRequest($request)
     {
-        if(null == $request->getRegionId())
-        {
+        if (null == $request->getRegionId()) {
             $request->setRegionId($this->iClientProfile->getRegionId());
         }
-        if(null == $request->getAcceptFormat())
-        {
+        if (null == $request->getAcceptFormat()) {
             $request->setAcceptFormat($this->iClientProfile->getFormat());
         }
-        if(null == $request->getMethod())
-        {
+        if (null == $request->getMethod()) {
             $request->setMethod("GET");
         }
         return $request;
@@ -179,16 +129,11 @@ class DefaultAcsClient implements IAcsClient
     
     private function parseAcsResponse($body, $format)
     {
-        if ("JSON" == $format)
-        {    
+        if ("JSON" == $format) {
             $respObject = json_decode($body);
-        }
-        else if("XML" == $format)
-        {
+        } elseif ("XML" == $format) {
             $respObject = @simplexml_load_string($body);
-        }
-        else if("RAW" == $format)
-        {
+        } elseif ("RAW" == $format) {
             $respObject = $body;
         }
         return $respObject;

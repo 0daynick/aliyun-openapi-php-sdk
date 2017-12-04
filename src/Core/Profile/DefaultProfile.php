@@ -1,4 +1,5 @@
 <?php
+namespace Aliyun\Core\Profile;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,14 +18,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-namespace Aliyun\Core\Profile;
-
-use Aliyun\Core\Auth\Credential;
 use Aliyun\Core\Auth\ShaHmac1Signer;
-use Aliyun\Core\Regions\Endpoint;
+use Aliyun\Core\Auth\Credential;
 use Aliyun\Core\Regions\EndpointProvider;
-use Aliyun\Core\Regions\ProductDomain;
+use Aliyun\Core\Regions\LocationService;
 
 class DefaultProfile implements IClientProfile
 {
@@ -54,7 +51,7 @@ class DefaultProfile implements IClientProfile
 	{
 		if(null == self::$isigner)
 		{
-			self::$isigner = new ShaHmac1Signer();
+			self::$isigner = new ShaHmac1Signer(); 
 		}
 		return self::$isigner;
 	}
@@ -102,6 +99,8 @@ class DefaultProfile implements IClientProfile
 		{
 			self::updateEndpoint($regionId, $product, $domain, $endpoint);
 		}
+
+		LocationService::addEndPoint($regionId, $product, $domain);
 	}
 	
 	public static function findEndpointByName($endpointName)
@@ -119,7 +118,7 @@ class DefaultProfile implements IClientProfile
 	{
 		$regionIds = array($regionId);
 		$productsDomains = array(new ProductDomain($product, $domain));
-		$endpoint = new Endpoint($endpointName, $regionIds, $productDomains);
+		$endpoint = new Endpoint($endpointName, $regionIds, $productsDomains);
 		array_push(self::$endpoints, $endpoint);
 	}
 	
@@ -132,24 +131,22 @@ class DefaultProfile implements IClientProfile
 			$endpoint->setRegionIds($regionIds);
 		}
 
-		$productDomains = $endpoint->getProductDomains();
-		if(null == self::findProductDomain($productDomains, $product, $domain))
-		{
-		 	array_push($productDomains, new ProductDomain($product, $domain));	
-		}
-		$endpoint->setProductDomains($productDomains);
-	}
-	
-	private static function findProductDomain($productDomains, $product, $domain)
-	{
-		foreach ($productDomains as $key => $productDomain)
-		{
-			if($productDomain->getProductName() == $product && $productDomain->getDomainName() == $domain)
-			{
-				return $productDomain;
-			}
-		}
-		return null;
-	}
+        $productDomains = $endpoint->getProductDomains();
+        if (null == self::findProductDomainAndUpdate($productDomains, $product, $domain)) {
+            array_push($productDomains, new ProductDomain($product, $domain));
+        }
 
+        $endpoint->setProductDomains($productDomains);
+    }
+    
+    private static function findProductDomainAndUpdate($productDomains, $product, $domain)
+    {
+        foreach ($productDomains as $key => $productDomain) {
+            if ($productDomain->getProductName() == $product) {
+                $productDomain->setDomainName($domain);
+                return $productDomain;
+            }
+        }
+        return null;
+    }
 }

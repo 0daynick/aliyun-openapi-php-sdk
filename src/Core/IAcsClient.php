@@ -1,4 +1,5 @@
 <?php
+namespace Aliyun\Core;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,10 +18,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-namespace Aliyun\Core;
-
 interface IAcsClient
 {
-	public function doAction($requst);
+    public function doAction($requst);
 }
