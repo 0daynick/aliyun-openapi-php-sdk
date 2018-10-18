@@ -1,10 +1,10 @@
 {
-    "name": "overnic/aliyun-openapi-php-sdk",
+    "name": "charlestide/aliyun-openapi-php-sdk",
     "description": "aliyun api package",
     "authors": [
         {
-            "name": "overnic",
-            "email": "overnic@httpd.cc"
+            "name": "Charles.Tide",
+            "email": "charlestide@vip.163.com"
         }
     ],
     "require": {

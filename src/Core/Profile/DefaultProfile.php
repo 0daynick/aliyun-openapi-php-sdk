@@ -22,6 +22,7 @@ use Aliyun\Core\Auth\ShaHmac1Signer;
 use Aliyun\Core\Auth\Credential;
 use Aliyun\Core\Regions\EndpointProvider;
 use Aliyun\Core\Regions\LocationService;
+use Aliyun\Core\Regions\ProductDomain;
 
 class DefaultProfile implements IClientProfile
 {
